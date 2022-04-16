@@ -31,19 +31,6 @@ PORT = 8001
 BUFFER_SIZE = 1024
 
 
-class TLSAdapter(adapters.HTTPAdapter):
-
-    def init_poolmanager(self, connections, maxsize, block=False):
-        """Create and initialize the urllib3 PoolManager."""
-        ctx = ssl.create_default_context()
-        ctx.set_ciphers('DEFAULT@SECLEVEL=1')
-        self.poolmanager = poolmanager.PoolManager(
-            num_pools=connections,
-            maxsize=maxsize,
-            block=block,
-            ssl_version=ssl.PROTOCOL_TLS,
-            ssl_context=ctx)
-
 def main():
 
     server_cache = {}
@@ -61,21 +48,13 @@ def main():
         headers = request.split('\n')
         search = headers[0].split()[1][1:]
         print(f'URL received: {search}')
-        # print(server_cache)
+
         if search in server_cache:
             response = 'HTTP/1.0 200 OK\n\n' + server_cache[search]
             client_connection.sendall(response.encode())
         else:
             # get resource
             try:
-
-                # session = requests.session()
-                # # session = requests.sessions.Session()
-                # session.mount('https://', TLSAdapter())
-                # new_http_response = session.get(f'https://{search}')
-
-                # new_http_response = requests.get(f'https://{search}')
-
                 url = 'https://' + search
                 q = Request(url)
                 response = urlopen(q)
@@ -100,10 +79,12 @@ def main():
             # except requests.exceptions.RequestException as e:
             except urllib.error.URLError as e:
                 print('URLError: {}'.format(e))
+                retry_with_http(search)
                 # if e.code == 404:
                 #     response = 'HTTP/1.0 404 NOT FOUND\n\nFile Not Found'
                 # else:
                 #     response = 'HTTP/1.0 500\n\nCould Not Connect To Server'
+
 
 def retry_with_http(site_name):
     try:
@@ -127,6 +108,9 @@ def retry_with_http(site_name):
 # www.walmart.ca
 # got a message asking if I'm a bot (webcrawling)
 
+# Sites that work:
+# www.google.com
+# www.walmart.ca
 
 
 
