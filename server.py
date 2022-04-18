@@ -6,7 +6,7 @@ import time
 
 HOST = 'localhost'
 PORT = 8001
-BUFFER_SIZE = 1024
+BUFFER_SIZE = 2048
 WEBSITE_REGEX = 'www.'
 server_cache = {}
 
@@ -24,7 +24,8 @@ def main():
         request = client_connection.recv(BUFFER_SIZE).decode()
 
         headers = request.split('\n')
-        if headers:
+        if len(headers) > 1:
+            print(f'HEADERS {headers}')
             search = headers[0].split()[1][1:]  # TODO: fix to allow browsers that use proxy settings and passing in URLs like this: www.google.com (as opposed to localhost:8001/www.google.com)
             print(f'URL received: {search}')
 
@@ -64,7 +65,7 @@ def retrieve_from_cache(cache_start, search, client_connection):
 
 
 def get_notification(init, duration):
-    return f'<div style="text-align:center; color: green; padding-top:15px">' \
+    return f'<div style="text-align:center; color:green; padding-top:15px">' \
            f'{"Initial" if init else "Cache"} retrieval time: {duration} seconds' \
            f'</div'
 
@@ -76,6 +77,7 @@ def insert_notification(content, notification):
     if start != -1:
         end = content.find(body_close, start)
         if end != -1:
+            print(content[:end+1] + notification + content[end:])
             return content[:end+1] + notification + content[end:]
     return content
 
